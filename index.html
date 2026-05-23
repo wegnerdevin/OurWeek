@@ -141,7 +141,7 @@
     gap: 8px;
     margin-bottom: 16px;
   }
-  input[type="text"], select {
+  input[type="text"], input[type="time"], select {
     flex: 1;
     background: var(--surface);
     color: var(--text);
@@ -154,7 +154,8 @@
     transition: border-color .15s ease;
     min-width: 0;
   }
-  input[type="text"]:focus, select:focus {
+  input[type="time"] { flex: 0 0 auto; width: auto; }
+  input[type="text"]:focus, input[type="time"]:focus, select:focus {
     border-color: var(--border-strong);
   }
   button.btn {
@@ -293,6 +294,20 @@
   }
   .day-items li .text { flex: 1; }
   .day-items li .text.done { text-decoration: line-through; color: var(--text-muted); }
+  .day-items li .time-chip {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .day-items li .time-chip:hover { background: var(--border); color: var(--text); }
+  .day-items li .time-chip.empty { color: var(--text-subtle); font-style: italic; }
   .day-items .small-btn { padding: 2px 6px; font-size: 12px; }
   .day-add {
     margin-top: 8px;
@@ -310,6 +325,11 @@
   .day-add:hover { color: var(--text); border-color: var(--border-strong); }
 
   /* This Week (published) view */
+  .pub-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin: -4px 0 12px;
+  }
   .pub-day {
     padding: 16px 0;
     border-bottom: 1px solid var(--border);
@@ -351,6 +371,15 @@
     border-radius: 50%;
     margin-top: 8px;
     flex-shrink: 0;
+  }
+  .pub-day-items li .pub-time {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+    min-width: 64px;
+    flex-shrink: 0;
+    padding-top: 1px;
+    font-weight: 500;
   }
   .pub-day-items li.done .text { text-decoration: line-through; color: var(--text-muted); }
   .pub-day-empty {
@@ -405,6 +434,17 @@
     text-align: left;
   }
   .modal .day-buttons button:hover { border-color: var(--border-strong); }
+  .modal .field-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+  .modal .field-row label {
+    font-size: 13px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
   .modal .modal-actions {
     display: flex;
     justify-content: flex-end;
@@ -499,7 +539,7 @@
         </button>
       </div>
     </div>
-    <p class="planner-hint">Tap a day to add an item, or use <em>Schedule</em> on a wishlist idea.</p>
+    <p class="planner-hint">Tap a day to add an item, or use <em>Schedule</em> on a wishlist idea. Click a time chip to set or change the time.</p>
     <div id="dayBlocks"></div>
   </section>
 
@@ -518,6 +558,11 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
+    </div>
+    <div class="pub-toolbar">
+      <button class="btn ghost" id="exportIcsBtn" title="Download this week as a calendar file">
+        Export .ics
+      </button>
     </div>
     <div id="pubDays"></div>
   </section>
@@ -559,6 +604,11 @@
 <div class="modal-backdrop" id="scheduleModal">
   <div class="modal">
     <h3 id="modalTitle">Schedule for…</h3>
+    <div class="field-row">
+      <label for="modalTime">Time (optional)</label>
+      <input type="time" id="modalTime" />
+      <button class="small-btn" id="modalTimeClear" type="button">Clear</button>
+    </div>
     <div class="day-buttons" id="modalDays"></div>
     <div class="modal-actions">
       <button class="btn ghost" id="modalCancel">Cancel</button>
@@ -571,9 +621,30 @@
   <div class="modal">
     <h3 id="addDayTitle">Add to day</h3>
     <input type="text" id="addDayInput" placeholder="What's happening?" style="margin-bottom:12px;" />
+    <div class="field-row">
+      <label for="addDayTime">Time (optional)</label>
+      <input type="time" id="addDayTime" />
+      <button class="small-btn" id="addDayTimeClear" type="button">Clear</button>
+    </div>
     <div class="modal-actions">
       <button class="btn ghost" id="addDayCancel">Cancel</button>
       <button class="btn" id="addDayConfirm">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Time-edit modal (for existing scheduled items) -->
+<div class="modal-backdrop" id="timeEditModal">
+  <div class="modal">
+    <h3 id="timeEditTitle">Set time</h3>
+    <div class="field-row">
+      <label for="timeEditInput">Time</label>
+      <input type="time" id="timeEditInput" />
+      <button class="small-btn" id="timeEditClear" type="button">Clear</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="timeEditCancel">Cancel</button>
+      <button class="btn" id="timeEditConfirm">Save</button>
     </div>
   </div>
 </div>
@@ -606,11 +677,11 @@
   // --------- State ---------
   let state = {
     wishlist: {},       // id -> { text, createdAt, status: 'idea'|'scheduled' }
-    schedule: {},       // weekKey -> { 0..6: { id -> { text, completed, sourceId } } }
+    schedule: {},       // weekKey -> { 0..6: { id -> { text, completed, sourceId, time?: 'HH:MM' } } }
   };
   let viewWeekStart = mondayOf(new Date());
   let pubWeekStart  = mondayOf(new Date());
-  let firebaseRef = null;          // Firebase ref or null
+  let firebaseRef = null;
   let firebaseDb  = null;
   let firebaseApp = null;
   let isSyncing   = false;
@@ -652,6 +723,19 @@
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
   }
+  function fmtTime(hhmm) {
+    if (!hhmm || !/^\d{1,2}:\d{2}$/.test(hhmm)) return "";
+    const [h, m] = hhmm.split(":").map(Number);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  }
+  // Sort key so untimed items sink to the bottom of a day
+  function timeSortKey(t) {
+    if (!t || !/^\d{1,2}:\d{2}$/.test(t)) return 99 * 60;
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  }
 
   // --------- Storage: local ---------
   function loadLocal() {
@@ -692,7 +776,6 @@
   }
 
   async function initFirebase(cfg) {
-    // Dynamically import Firebase ESM modules
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
     const { getDatabase, ref, onValue, set } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
 
@@ -702,11 +785,9 @@
     firebaseDb  = getDatabase(firebaseApp);
     firebaseRef = ref(firebaseDb, "ourweek");
 
-    // First: push local data up if remote is empty; otherwise pull remote down.
     onValue(firebaseRef, (snap) => {
       const remote = snap.val();
       if (remote && (remote.wishlist || remote.schedule)) {
-        // Adopt remote
         suppressNextLocalSave = true;
         state.wishlist = remote.wishlist || {};
         state.schedule = remote.schedule || {};
@@ -714,7 +795,6 @@
         renderAll();
         setSyncDot("live", "Synced with your partner.");
       } else {
-        // Push local up
         set(firebaseRef, { wishlist: state.wishlist, schedule: state.schedule }).then(() => {
           setSyncDot("live", "Synced (this device seeded remote).");
         }).catch(err => {
@@ -727,7 +807,6 @@
       setSyncDot("error", "Read failed: " + err.message);
     });
 
-    // Expose a save function
     isSyncing = true;
     window.__pushRemote = async () => {
       if (!firebaseRef) return;
@@ -816,7 +895,6 @@
     const t = next.trim();
     if (!t) return;
     state.wishlist[id].text = t;
-    // Cascade rename to any scheduled items that came from this wishlist item
     for (const wk of Object.keys(state.schedule)) {
       for (let d=0; d<7; d++) {
         const day = state.schedule[wk]?.[d];
@@ -832,7 +910,6 @@
   function deleteWishlist(id) {
     if (!confirm("Delete this idea?")) return;
     delete state.wishlist[id];
-    // Don't remove already-scheduled items — they stay on the calendar.
     persist();
     renderAll();
   }
@@ -843,6 +920,7 @@
     scheduleSourceId = id;
     const item = state.wishlist[id];
     document.getElementById("modalTitle").textContent = `Schedule “${item.text}” for…`;
+    document.getElementById("modalTime").value = "";
     const wrap = document.getElementById("modalDays");
     wrap.innerHTML = "";
     for (let d=0; d<7; d++) {
@@ -850,7 +928,8 @@
       const btn = document.createElement("button");
       btn.innerHTML = `<div style="font-weight:600">${DAYS_LONG[d]}</div><div style="color:var(--text-muted); font-size:12px;">${fmtDay(date)}</div>`;
       btn.onclick = () => {
-        scheduleItemOnDay(id, viewWeekStart, d);
+        const time = document.getElementById("modalTime").value || null;
+        scheduleItemOnDay(id, viewWeekStart, d, time);
         closeScheduleModal();
       };
       wrap.appendChild(btn);
@@ -862,7 +941,7 @@
     scheduleSourceId = null;
   }
 
-  function scheduleItemOnDay(sourceId, weekMon, dayIdx) {
+  function scheduleItemOnDay(sourceId, weekMon, dayIdx, time) {
     const wk = weekKey(weekMon);
     state.schedule[wk] = state.schedule[wk] || {};
     state.schedule[wk][dayIdx] = state.schedule[wk][dayIdx] || {};
@@ -871,9 +950,9 @@
       text: state.wishlist[sourceId].text,
       completed: false,
       sourceId,
+      time: time || null,
     };
     state.wishlist[sourceId].status = "scheduled";
-    // Auto-jump to the plan view for that week
     viewWeekStart = mondayOf(weekMon);
     persist();
     renderAll();
@@ -887,7 +966,9 @@
     const date = addDays(weekMon, dayIdx);
     document.getElementById("addDayTitle").textContent = `Add to ${DAYS_LONG[dayIdx]}, ${fmtDay(date)}`;
     const inp = document.getElementById("addDayInput");
+    const timeInp = document.getElementById("addDayTime");
     inp.value = "";
+    timeInp.value = "";
     document.getElementById("addDayModal").classList.add("open");
     setTimeout(() => inp.focus(), 60);
   }
@@ -897,6 +978,7 @@
   }
   function confirmAddDay() {
     const inp = document.getElementById("addDayInput");
+    const timeInp = document.getElementById("addDayTime");
     const text = inp.value.trim();
     if (!text || !addDayTarget) { closeAddDayModal(); return; }
     const { weekMon, dayIdx } = addDayTarget;
@@ -904,10 +986,44 @@
     state.schedule[wk] = state.schedule[wk] || {};
     state.schedule[wk][dayIdx] = state.schedule[wk][dayIdx] || {};
     const sid = uid();
-    state.schedule[wk][dayIdx][sid] = { text, completed: false, sourceId: null };
+    state.schedule[wk][dayIdx][sid] = {
+      text,
+      completed: false,
+      sourceId: null,
+      time: timeInp.value || null,
+    };
     persist();
     renderAll();
     closeAddDayModal();
+  }
+
+  // --------- Time edit modal (for existing scheduled items) ---------
+  let timeEditTarget = null;
+  function openTimeEditModal(weekMon, dayIdx, sid) {
+    const wk = weekKey(weekMon);
+    const item = state.schedule[wk]?.[dayIdx]?.[sid];
+    if (!item) return;
+    timeEditTarget = { weekMon, dayIdx, sid };
+    document.getElementById("timeEditTitle").textContent = `Set time — ${item.text}`;
+    document.getElementById("timeEditInput").value = item.time || "";
+    document.getElementById("timeEditModal").classList.add("open");
+    setTimeout(() => document.getElementById("timeEditInput").focus(), 60);
+  }
+  function closeTimeEditModal() {
+    document.getElementById("timeEditModal").classList.remove("open");
+    timeEditTarget = null;
+  }
+  function confirmTimeEdit() {
+    if (!timeEditTarget) { closeTimeEditModal(); return; }
+    const { weekMon, dayIdx, sid } = timeEditTarget;
+    const wk = weekKey(weekMon);
+    if (state.schedule[wk]?.[dayIdx]?.[sid]) {
+      const v = document.getElementById("timeEditInput").value;
+      state.schedule[wk][dayIdx][sid].time = v || null;
+      persist();
+      renderAll();
+    }
+    closeTimeEditModal();
   }
 
   // --------- Render: Plan ---------
@@ -922,11 +1038,16 @@
       const block = document.createElement("div");
       block.className = "day-block" + (sameDay(date, today) ? " today" : "");
       const items = state.schedule[wk]?.[d] || {};
-      const itemsHtml = Object.entries(items).map(([sid, it]) => {
+      const sortedEntries = Object.entries(items)
+        .sort((a, b) => timeSortKey(a[1].time) - timeSortKey(b[1].time));
+      const itemsHtml = sortedEntries.map(([sid, it]) => {
         const safe = escapeHtml(it.text);
+        const timeLabel = it.time ? escapeHtml(fmtTime(it.time)) : "+ time";
+        const chipClass = it.time ? "time-chip" : "time-chip empty";
         return `<li>
           <input type="checkbox" data-sid="${sid}" data-day="${d}" ${it.completed ? "checked" : ""} />
           <span class="text ${it.completed?"done":""}">${safe}</span>
+          <button class="${chipClass}" data-action="edit-time" data-sid="${sid}" data-day="${d}">${timeLabel}</button>
           <button class="small-btn" data-action="remove" data-sid="${sid}" data-day="${d}">×</button>
         </li>`;
       }).join("");
@@ -938,13 +1059,15 @@
         <ul class="day-items">${itemsHtml}</ul>
         <button class="day-add" data-day="${d}">+ Add to ${DAYS[d]}</button>
       `;
-      // wire events
       block.querySelector(".day-add").onclick = () => openAddDayModal(viewWeekStart, d);
       block.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        cb.onchange = (e) => toggleScheduledItem(viewWeekStart, +cb.dataset.day, cb.dataset.sid, cb.checked);
+        cb.onchange = () => toggleScheduledItem(viewWeekStart, +cb.dataset.day, cb.dataset.sid, cb.checked);
       });
       block.querySelectorAll('[data-action="remove"]').forEach(btn => {
         btn.onclick = () => removeScheduledItem(viewWeekStart, +btn.dataset.day, btn.dataset.sid);
+      });
+      block.querySelectorAll('[data-action="edit-time"]').forEach(btn => {
+        btn.onclick = () => openTimeEditModal(viewWeekStart, +btn.dataset.day, btn.dataset.sid);
       });
       wrap.appendChild(block);
     }
@@ -962,7 +1085,6 @@
     const item = state.schedule[wk]?.[dayIdx]?.[sid];
     if (!item) return;
     delete state.schedule[wk][dayIdx][sid];
-    // If the source wishlist item no longer appears anywhere scheduled, flip it back to 'idea'.
     if (item.sourceId && state.wishlist[item.sourceId]) {
       const stillScheduled = anyStillScheduled(item.sourceId);
       if (!stillScheduled) state.wishlist[item.sourceId].status = "idea";
@@ -994,11 +1116,15 @@
       const date = addDays(pubWeekStart, d);
       const isToday = sameDay(date, today);
       const items = state.schedule[wk]?.[d] || {};
-      const itemsArr = Object.values(items);
-      const itemsHtml = itemsArr.length
-        ? `<ul class="pub-day-items">${itemsArr.map(it => `
-            <li class="${it.completed?"done":""}"><span class="dot"></span><span class="text">${escapeHtml(it.text)}</span></li>
-          `).join("")}</ul>`
+      const sortedItems = Object.values(items)
+        .sort((a, b) => timeSortKey(a.time) - timeSortKey(b.time));
+      const itemsHtml = sortedItems.length
+        ? `<ul class="pub-day-items">${sortedItems.map(it => {
+            const leading = it.time
+              ? `<span class="pub-time">${escapeHtml(fmtTime(it.time))}</span>`
+              : `<span class="dot"></span>`;
+            return `<li class="${it.completed?"done":""}">${leading}<span class="text">${escapeHtml(it.text)}</span></li>`;
+          }).join("")}</ul>`
         : `<div class="pub-day-empty">Nothing planned</div>`;
       const block = document.createElement("div");
       block.className = "pub-day" + (isToday ? " today" : "");
@@ -1030,6 +1156,98 @@
   }
 
   function renderAll() { renderWishlist(); renderPlan(); renderPub(); }
+
+  // --------- ICS export ---------
+  // Builds an .ics file for the currently published week. Untimed items become
+  // all-day events; timed items become 1-hour events at the local time.
+  function pad2(n) { return String(n).padStart(2, "0"); }
+  function icsDate(d) {
+    return `${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}`;
+  }
+  function icsDateTimeLocal(d) {
+    return `${icsDate(d)}T${pad2(d.getHours())}${pad2(d.getMinutes())}00`;
+  }
+  function icsDateTimeUtc(d) {
+    return `${d.getUTCFullYear()}${pad2(d.getUTCMonth()+1)}${pad2(d.getUTCDate())}T${pad2(d.getUTCHours())}${pad2(d.getUTCMinutes())}${pad2(d.getUTCSeconds())}Z`;
+  }
+  function foldLine(line) {
+    if (line.length <= 75) return line;
+    const out = [];
+    let i = 0;
+    out.push(line.slice(i, i + 75));
+    i += 75;
+    while (i < line.length) {
+      out.push(" " + line.slice(i, i + 74));
+      i += 74;
+    }
+    return out.join("\r\n");
+  }
+  function icsEscape(s) {
+    return String(s)
+      .replace(/\\/g, "\\\\")
+      .replace(/;/g, "\\;")
+      .replace(/,/g, "\\,")
+      .replace(/\r?\n/g, "\\n");
+  }
+  function buildIcs(weekMon) {
+    const wk = weekKey(weekMon);
+    const dtstamp = icsDateTimeUtc(new Date());
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Our Week//Couples Planner//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      `X-WR-CALNAME:Our Week ${fmtWeekRange(weekMon)}`,
+    ];
+    let eventCount = 0;
+    for (let d = 0; d < 7; d++) {
+      const date = addDays(weekMon, d);
+      const items = state.schedule[wk]?.[d] || {};
+      for (const [sid, it] of Object.entries(items)) {
+        eventCount++;
+        const uidStr = `${wk}-${d}-${sid}@ourweek`;
+        const summary = icsEscape(it.text || "(untitled)");
+        lines.push("BEGIN:VEVENT");
+        lines.push(foldLine(`UID:${uidStr}`));
+        lines.push(`DTSTAMP:${dtstamp}`);
+        lines.push(foldLine(`SUMMARY:${summary}`));
+        if (it.time && /^\d{1,2}:\d{2}$/.test(it.time)) {
+          const [h, m] = it.time.split(":").map(Number);
+          const start = new Date(date);
+          start.setHours(h, m, 0, 0);
+          const end = new Date(start);
+          end.setHours(start.getHours() + 1);
+          // Floating local time — calendars treat as device's local time
+          lines.push(`DTSTART:${icsDateTimeLocal(start)}`);
+          lines.push(`DTEND:${icsDateTimeLocal(end)}`);
+        } else {
+          const nextDay = addDays(date, 1);
+          lines.push(`DTSTART;VALUE=DATE:${icsDate(date)}`);
+          lines.push(`DTEND;VALUE=DATE:${icsDate(nextDay)}`);
+        }
+        lines.push("END:VEVENT");
+      }
+    }
+    lines.push("END:VCALENDAR");
+    return { ics: lines.join("\r\n"), count: eventCount };
+  }
+  function downloadIcsForWeek(weekMon) {
+    const { ics, count } = buildIcs(weekMon);
+    if (count === 0) {
+      alert("Nothing scheduled for this week yet.");
+      return;
+    }
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `our-week-${weekKey(weekMon)}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+  }
 
   // --------- View switching ---------
   function switchView(name) {
@@ -1068,18 +1286,32 @@
     document.getElementById("pubNextWeek").onclick = () => { pubWeekStart = addDays(pubWeekStart, 7); renderPub(); };
     document.getElementById("pubThisWeekBtn").onclick = () => { pubWeekStart = mondayOf(new Date()); renderPub(); };
 
+    document.getElementById("exportIcsBtn").onclick = () => downloadIcsForWeek(pubWeekStart);
+
     document.getElementById("modalCancel").onclick = closeScheduleModal;
+    document.getElementById("modalTimeClear").onclick = () => { document.getElementById("modalTime").value = ""; };
     document.getElementById("scheduleModal").addEventListener("click", e => {
       if (e.target.id === "scheduleModal") closeScheduleModal();
     });
 
     document.getElementById("addDayCancel").onclick = closeAddDayModal;
     document.getElementById("addDayConfirm").onclick = confirmAddDay;
+    document.getElementById("addDayTimeClear").onclick = () => { document.getElementById("addDayTime").value = ""; };
     document.getElementById("addDayInput").addEventListener("keydown", e => {
       if (e.key === "Enter") confirmAddDay();
     });
     document.getElementById("addDayModal").addEventListener("click", e => {
       if (e.target.id === "addDayModal") closeAddDayModal();
+    });
+
+    document.getElementById("timeEditCancel").onclick = closeTimeEditModal;
+    document.getElementById("timeEditConfirm").onclick = confirmTimeEdit;
+    document.getElementById("timeEditClear").onclick = () => { document.getElementById("timeEditInput").value = ""; };
+    document.getElementById("timeEditInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") confirmTimeEdit();
+    });
+    document.getElementById("timeEditModal").addEventListener("click", e => {
+      if (e.target.id === "timeEditModal") closeTimeEditModal();
     });
 
     document.getElementById("openSettings").onclick = () => switchView("settings");
@@ -1105,7 +1337,6 @@
       document.getElementById("firebaseConfig").value = "";
       setSyncDot("local", "Disconnected. Reload the page to fully stop syncing.");
     };
-    // Prefill firebase config if present
     const stored = localStorage.getItem(LS_FIREBASE);
     if (stored) {
       try { document.getElementById("firebaseConfig").value = JSON.stringify(JSON.parse(stored), null, 2); }
