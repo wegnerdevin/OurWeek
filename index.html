@@ -23,6 +23,1144 @@
     --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
     --radius: 10px;
     --radius-sm: 6px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #09090b;
+      --surface: #18181b;
+      --surface-2: #27272a;
+      --border: #27272a;
+      --border-strong: #3f3f46;
+      --text: #fafafa;
+      --text-muted: #a1a1aa;
+      --text-subtle: #71717a;
+      --accent: #fafafa;
+      --accent-soft: #27272a;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .app {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: env(safe-area-inset-top) 16px calc(72px + env(safe-area-inset-bottom));
+  }
+
+  header.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0 12px;
+  }
+  .title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sync-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text-subtle);
+    transition: background .2s ease;
+  }
+  .sync-dot.live { background: var(--success); }
+  .sync-dot.error { background: var(--danger); }
+
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    width: 36px; height: 36px;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+  }
+  .icon-btn:hover { background: var(--surface-2); color: var(--text); }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  /* Tabs */
+  nav.tabs {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    z-index: 50;
+  }
+  .tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 8px 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border-radius: var(--radius-sm);
+    transition: color .15s ease, background .15s ease;
+  }
+  .tab svg { width: 22px; height: 22px; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Cards / inputs */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  input[type="text"], select {
+    flex: 1;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s ease;
+    min-width: 0;
+  }
+  input[type="text"]:focus, select:focus {
+    border-color: var(--border-strong);
+  }
+  button.btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: opacity .15s ease;
+  }
+  button.btn:hover { opacity: 0.85; }
+  button.btn.ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  button.btn.ghost:hover { color: var(--text); background: var(--surface-2); }
+
+  /* Wishlist */
+  .wishlist {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .wishlist-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: border-color .15s ease;
+  }
+  .wishlist-item.scheduled { opacity: 0.55; }
+  .wishlist-item .text { flex: 1; word-break: break-word; }
+  .wishlist-item .text.done { text-decoration: line-through; color: var(--text-muted); }
+  .wishlist-item .actions { display: flex; gap: 4px; opacity: 0; transition: opacity .15s ease; }
+  .wishlist-item:hover .actions, .wishlist-item:focus-within .actions { opacity: 1; }
+  @media (hover: none) { .wishlist-item .actions { opacity: 1; } }
+
+  .small-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-subtle);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .small-btn:hover { color: var(--text); background: var(--surface-2); }
+
+  .empty {
+    text-align: center;
+    color: var(--text-subtle);
+    padding: 40px 20px;
+    font-size: 14px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-subtle);
+    font-weight: 600;
+    margin: 24px 0 10px;
+  }
+  .section-label:first-of-type { margin-top: 4px; }
+
+  /* Week planner */
+  .week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 8px;
+  }
+  .week-nav .week-label {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .week-nav-btns { display: flex; gap: 6px; }
+
+  .planner-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+  }
+
+  .day-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .day-block.today { border-color: var(--accent); }
+  .day-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .day-name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .day-date {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .day-items {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .day-items li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    padding: 4px 0;
+  }
+  .day-items li .text { flex: 1; }
+  .day-items li .text.done { text-decoration: line-through; color: var(--text-muted); }
+  .day-items .small-btn { padding: 2px 6px; font-size: 12px; }
+  .day-add {
+    margin-top: 8px;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--text-subtle);
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .day-add:hover { color: var(--text); border-color: var(--border-strong); }
+
+  /* This Week (published) view */
+  .pub-day {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pub-day:last-child { border-bottom: none; }
+  .pub-day.today .pub-day-header { color: var(--accent); }
+  .pub-day-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .pub-day-name {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .pub-day-date {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .pub-day-items {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .pub-day-items li {
+    font-size: 15px;
+    padding: 6px 0;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .pub-day-items li .dot {
+    width: 6px; height: 6px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    margin-top: 8px;
+    flex-shrink: 0;
+  }
+  .pub-day-items li.done .text { text-decoration: line-through; color: var(--text-muted); }
+  .pub-day-empty {
+    font-size: 14px;
+    color: var(--text-subtle);
+    font-style: italic;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  @media (min-width: 640px) {
+    .modal-backdrop { align-items: center; }
+  }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 20px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  }
+  .modal h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .modal .day-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .modal .day-buttons button {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+  }
+  .modal .day-buttons button:hover { border-color: var(--border-strong); }
+  .modal .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  /* Settings */
+  .settings-section { padding: 8px 0 16px; }
+  .settings-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  .settings-section p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 12px;
+  }
+  textarea {
+    width: 100%;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    min-height: 140px;
+    resize: vertical;
+    outline: none;
+  }
+  .help-link {
+    color: var(--text-muted);
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+  }
+  .status-msg {
+    font-size: 12px;
+    margin-top: 8px;
+    color: var(--text-muted);
+  }
+  .status-msg.ok { color: var(--success); }
+  .status-msg.err { color: var(--danger); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="app-header">
+    <div class="title">
+      <span class="sync-dot" id="syncDot" title="Local only"></span>
+      Our Week
+    </div>
+    <button class="icon-btn" id="openSettings" title="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </header>
+
+  <!-- WISHLIST VIEW -->
+  <section class="view active" id="view-wishlist">
+    <div class="input-row">
+      <input type="text" id="wishlistInput" placeholder="Add an idea… (dinner out, movie night, hike)" autocomplete="off" />
+      <button class="btn" id="addWishlist">Add</button>
+    </div>
+    <div class="section-label">Ideas</div>
+    <ul class="wishlist" id="wishlistList"></ul>
+    <div class="empty" id="wishlistEmpty" style="display:none;">Nothing on the wishlist yet. Add an idea above.</div>
+
+    <div class="section-label" id="scheduledLabel" style="display:none;">Already scheduled</div>
+    <ul class="wishlist" id="scheduledList"></ul>
+  </section>
+
+  <!-- PLAN VIEW -->
+  <section class="view" id="view-plan">
+    <div class="week-nav">
+      <button class="icon-btn" id="prevWeek" title="Previous week">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="week-label" id="weekLabel">This week</div>
+      <div class="week-nav-btns">
+        <button class="icon-btn" id="thisWeekBtn" title="This week">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg>
+        </button>
+        <button class="icon-btn" id="nextWeek" title="Next week">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+    <p class="planner-hint">Tap a day to add an item, or use <em>Schedule</em> on a wishlist idea.</p>
+    <div id="dayBlocks"></div>
+  </section>
+
+  <!-- PUBLISHED VIEW -->
+  <section class="view" id="view-pub">
+    <div class="week-nav">
+      <button class="icon-btn" id="pubPrevWeek" title="Previous week">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="week-label" id="pubWeekLabel">This week</div>
+      <div class="week-nav-btns">
+        <button class="icon-btn" id="pubThisWeekBtn" title="This week">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg>
+        </button>
+        <button class="icon-btn" id="pubNextWeek" title="Next week">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="pubDays"></div>
+  </section>
+
+  <!-- SETTINGS VIEW -->
+  <section class="view" id="view-settings">
+    <div class="settings-section">
+      <h3>Sync between devices</h3>
+      <p>Paste your Firebase config below to sync the wishlist and schedule between you and your partner in real time. Leave blank to use this device only.</p>
+      <textarea id="firebaseConfig" placeholder='{
+  "apiKey": "...",
+  "authDomain": "...",
+  "databaseURL": "https://....firebaseio.com",
+  "projectId": "...",
+  "appId": "..."
+}'></textarea>
+      <div style="display:flex; gap:8px; margin-top:8px; flex-wrap: wrap;">
+        <button class="btn" id="saveFirebase">Save & connect</button>
+        <button class="btn ghost" id="clearFirebase">Disconnect</button>
+      </div>
+      <div class="status-msg" id="syncStatus"></div>
+    </div>
+    <div class="settings-section">
+      <h3>Data</h3>
+      <p>Export everything as a JSON file, or wipe local data.</p>
+      <div style="display:flex; gap:8px; flex-wrap: wrap;">
+        <button class="btn ghost" id="exportBtn">Export data</button>
+        <button class="btn ghost" id="resetBtn">Reset local data</button>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>About</h3>
+      <p>Our Week — a simple shared planner. Built for two.</p>
+    </div>
+  </section>
+</div>
+
+<!-- Schedule modal -->
+<div class="modal-backdrop" id="scheduleModal">
+  <div class="modal">
+    <h3 id="modalTitle">Schedule for…</h3>
+    <div class="day-buttons" id="modalDays"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="modalCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add-to-day modal -->
+<div class="modal-backdrop" id="addDayModal">
+  <div class="modal">
+    <h3 id="addDayTitle">Add to day</h3>
+    <input type="text" id="addDayInput" placeholder="What's happening?" style="margin-bottom:12px;" />
+    <div class="modal-actions">
+      <button class="btn ghost" id="addDayCancel">Cancel</button>
+      <button class="btn" id="addDayConfirm">Add</button>
+    </div>
+  </div>
+</div>
+
+<nav class="tabs">
+  <button class="tab active" data-view="wishlist">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    Wishlist
+  </button>
+  <button class="tab" data-view="plan">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Plan
+  </button>
+  <button class="tab" data-view="pub">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+    This Week
+  </button>
+</nav>
+
+<script type="module">
+  /* ============================
+     OUR WEEK — a couples planner
+     ============================ */
+
+  const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const DAYS_LONG = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const LS_KEY = "ourweek-v1";
+  const LS_FIREBASE = "ourweek-firebase-config";
+
+  // --------- State ---------
+  let state = {
+    wishlist: {},       // id -> { text, createdAt, status: 'idea'|'scheduled' }
+    schedule: {},       // weekKey -> { 0..6: { id -> { text, completed, sourceId } } }
+  };
+  let viewWeekStart = mondayOf(new Date());
+  let pubWeekStart  = mondayOf(new Date());
+  let firebaseRef = null;          // Firebase ref or null
+  let firebaseDb  = null;
+  let firebaseApp = null;
+  let isSyncing   = false;
+  let suppressNextLocalSave = false;
+
+  // --------- Util: dates ---------
+  function mondayOf(d) {
+    const date = new Date(d);
+    date.setHours(0,0,0,0);
+    const day = date.getDay(); // 0 Sun ... 6 Sat
+    const diff = (day === 0 ? -6 : 1 - day); // shift to Monday
+    date.setDate(date.getDate() + diff);
+    return date;
+  }
+  function weekKey(d) {
+    const m = mondayOf(d);
+    const y = m.getFullYear();
+    const mo = String(m.getMonth()+1).padStart(2,"0");
+    const da = String(m.getDate()).padStart(2,"0");
+    return `${y}-${mo}-${da}`;
+  }
+  function addDays(d, n) {
+    const x = new Date(d); x.setDate(x.getDate()+n); return x;
+  }
+  function fmtDay(d) {
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+  function fmtWeekRange(startMon) {
+    const end = addDays(startMon, 6);
+    const sameMonth = startMon.getMonth() === end.getMonth();
+    if (sameMonth) {
+      return `${startMon.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${end.getDate()}`;
+    }
+    return `${startMon.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${end.toLocaleDateString(undefined,{month:"short",day:"numeric"})}`;
+  }
+  function sameDay(a,b) {
+    return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  }
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+
+  // --------- Storage: local ---------
+  function loadLocal() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        state.wishlist = parsed.wishlist || {};
+        state.schedule = parsed.schedule || {};
+      }
+    } catch (e) {
+      console.warn("Could not load local state:", e);
+    }
+  }
+  function saveLocal() {
+    if (suppressNextLocalSave) { suppressNextLocalSave = false; return; }
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        wishlist: state.wishlist,
+        schedule: state.schedule,
+      }));
+    } catch (e) {
+      console.warn("Could not save:", e);
+    }
+  }
+
+  // --------- Firebase (optional) ---------
+  async function initFirebaseFromStored() {
+    const raw = localStorage.getItem(LS_FIREBASE);
+    if (!raw) { setSyncDot("local"); return; }
+    try {
+      const cfg = JSON.parse(raw);
+      await initFirebase(cfg);
+    } catch (e) {
+      console.warn("Firebase init failed:", e);
+      setSyncDot("error", "Sync failed — check config in Settings.");
+    }
+  }
+
+  async function initFirebase(cfg) {
+    // Dynamically import Firebase ESM modules
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getDatabase, ref, onValue, set } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+
+    if (!cfg.databaseURL) throw new Error("Config is missing databaseURL");
+
+    firebaseApp = initializeApp(cfg, "ourweek-" + Date.now());
+    firebaseDb  = getDatabase(firebaseApp);
+    firebaseRef = ref(firebaseDb, "ourweek");
+
+    // First: push local data up if remote is empty; otherwise pull remote down.
+    onValue(firebaseRef, (snap) => {
+      const remote = snap.val();
+      if (remote && (remote.wishlist || remote.schedule)) {
+        // Adopt remote
+        suppressNextLocalSave = true;
+        state.wishlist = remote.wishlist || {};
+        state.schedule = remote.schedule || {};
+        saveLocal();
+        renderAll();
+        setSyncDot("live", "Synced with your partner.");
+      } else {
+        // Push local up
+        set(firebaseRef, { wishlist: state.wishlist, schedule: state.schedule }).then(() => {
+          setSyncDot("live", "Synced (this device seeded remote).");
+        }).catch(err => {
+          console.warn(err);
+          setSyncDot("error", "Could not write to Firebase: " + err.message);
+        });
+      }
+    }, (err) => {
+      console.warn(err);
+      setSyncDot("error", "Read failed: " + err.message);
+    });
+
+    // Expose a save function
+    isSyncing = true;
+    window.__pushRemote = async () => {
+      if (!firebaseRef) return;
+      try {
+        await set(firebaseRef, { wishlist: state.wishlist, schedule: state.schedule });
+      } catch (e) {
+        console.warn("Remote write failed:", e);
+        setSyncDot("error", e.message);
+      }
+    };
+    setSyncDot("live", "Connecting…");
+  }
+
+  function setSyncDot(mode, msg) {
+    const dot = document.getElementById("syncDot");
+    const status = document.getElementById("syncStatus");
+    dot.classList.remove("live","error");
+    if (mode === "live") { dot.classList.add("live"); dot.title = "Synced"; }
+    else if (mode === "error") { dot.classList.add("error"); dot.title = "Sync error"; }
+    else { dot.title = "Local only"; }
+    if (msg && status) {
+      status.textContent = msg;
+      status.className = "status-msg " + (mode === "live" ? "ok" : mode === "error" ? "err" : "");
+    }
+  }
+
+  function persist() {
+    saveLocal();
+    if (window.__pushRemote) window.__pushRemote();
+  }
+
+  // --------- Render: Wishlist ---------
+  function renderWishlist() {
+    const ul = document.getElementById("wishlistList");
+    const sUl = document.getElementById("scheduledList");
+    const empty = document.getElementById("wishlistEmpty");
+    const sLabel = document.getElementById("scheduledLabel");
+    ul.innerHTML = ""; sUl.innerHTML = "";
+
+    const items = Object.entries(state.wishlist)
+      .map(([id,v]) => ({ id, ...v }))
+      .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+
+    const ideas = items.filter(i => i.status !== "scheduled");
+    const scheduled = items.filter(i => i.status === "scheduled");
+
+    empty.style.display = ideas.length === 0 ? "block" : "none";
+    sLabel.style.display = scheduled.length === 0 ? "none" : "block";
+
+    for (const it of ideas) ul.appendChild(wishItemEl(it, false));
+    for (const it of scheduled) sUl.appendChild(wishItemEl(it, true));
+  }
+
+  function wishItemEl(it, scheduled) {
+    const li = document.createElement("li");
+    li.className = "wishlist-item" + (scheduled ? " scheduled" : "");
+    li.innerHTML = `
+      <span class="text"></span>
+      <div class="actions">
+        ${scheduled ? "" : `<button class="small-btn" data-act="schedule">Schedule</button>`}
+        <button class="small-btn" data-act="edit">Edit</button>
+        <button class="small-btn" data-act="delete">Delete</button>
+      </div>`;
+    li.querySelector(".text").textContent = it.text;
+    li.querySelector('[data-act="edit"]').onclick = () => editWishlist(it.id);
+    li.querySelector('[data-act="delete"]').onclick = () => deleteWishlist(it.id);
+    if (!scheduled) {
+      li.querySelector('[data-act="schedule"]').onclick = () => openScheduleModal(it.id);
+    }
+    return li;
+  }
+
+  function addWishlist(text) {
+    const t = text.trim();
+    if (!t) return;
+    const id = uid();
+    state.wishlist[id] = { text: t, createdAt: Date.now(), status: "idea" };
+    persist();
+    renderAll();
+  }
+  function editWishlist(id) {
+    const cur = state.wishlist[id];
+    if (!cur) return;
+    const next = prompt("Edit:", cur.text);
+    if (next === null) return;
+    const t = next.trim();
+    if (!t) return;
+    state.wishlist[id].text = t;
+    // Cascade rename to any scheduled items that came from this wishlist item
+    for (const wk of Object.keys(state.schedule)) {
+      for (let d=0; d<7; d++) {
+        const day = state.schedule[wk]?.[d];
+        if (!day) continue;
+        for (const sid of Object.keys(day)) {
+          if (day[sid].sourceId === id) day[sid].text = t;
+        }
+      }
+    }
+    persist();
+    renderAll();
+  }
+  function deleteWishlist(id) {
+    if (!confirm("Delete this idea?")) return;
+    delete state.wishlist[id];
+    // Don't remove already-scheduled items — they stay on the calendar.
+    persist();
+    renderAll();
+  }
+
+  // --------- Schedule modal ---------
+  let scheduleSourceId = null;
+  function openScheduleModal(id) {
+    scheduleSourceId = id;
+    const item = state.wishlist[id];
+    document.getElementById("modalTitle").textContent = `Schedule “${item.text}” for…`;
+    const wrap = document.getElementById("modalDays");
+    wrap.innerHTML = "";
+    for (let d=0; d<7; d++) {
+      const date = addDays(viewWeekStart, d);
+      const btn = document.createElement("button");
+      btn.innerHTML = `<div style="font-weight:600">${DAYS_LONG[d]}</div><div style="color:var(--text-muted); font-size:12px;">${fmtDay(date)}</div>`;
+      btn.onclick = () => {
+        scheduleItemOnDay(id, viewWeekStart, d);
+        closeScheduleModal();
+      };
+      wrap.appendChild(btn);
+    }
+    document.getElementById("scheduleModal").classList.add("open");
+  }
+  function closeScheduleModal() {
+    document.getElementById("scheduleModal").classList.remove("open");
+    scheduleSourceId = null;
+  }
+
+  function scheduleItemOnDay(sourceId, weekMon, dayIdx) {
+    const wk = weekKey(weekMon);
+    state.schedule[wk] = state.schedule[wk] || {};
+    state.schedule[wk][dayIdx] = state.schedule[wk][dayIdx] || {};
+    const sid = uid();
+    state.schedule[wk][dayIdx][sid] = {
+      text: state.wishlist[sourceId].text,
+      completed: false,
+      sourceId,
+    };
+    state.wishlist[sourceId].status = "scheduled";
+    // Auto-jump to the plan view for that week
+    viewWeekStart = mondayOf(weekMon);
+    persist();
+    renderAll();
+    switchView("plan");
+  }
+
+  // --------- Add-to-day modal ---------
+  let addDayTarget = null; // { weekMon, dayIdx }
+  function openAddDayModal(weekMon, dayIdx) {
+    addDayTarget = { weekMon, dayIdx };
+    const date = addDays(weekMon, dayIdx);
+    document.getElementById("addDayTitle").textContent = `Add to ${DAYS_LONG[dayIdx]}, ${fmtDay(date)}`;
+    const inp = document.getElementById("addDayInput");
+    inp.value = "";
+    document.getElementById("addDayModal").classList.add("open");
+    setTimeout(() => inp.focus(), 60);
+  }
+  function closeAddDayModal() {
+    document.getElementById("addDayModal").classList.remove("open");
+    addDayTarget = null;
+  }
+  function confirmAddDay() {
+    const inp = document.getElementById("addDayInput");
+    const text = inp.value.trim();
+    if (!text || !addDayTarget) { closeAddDayModal(); return; }
+    const { weekMon, dayIdx } = addDayTarget;
+    const wk = weekKey(weekMon);
+    state.schedule[wk] = state.schedule[wk] || {};
+    state.schedule[wk][dayIdx] = state.schedule[wk][dayIdx] || {};
+    const sid = uid();
+    state.schedule[wk][dayIdx][sid] = { text, completed: false, sourceId: null };
+    persist();
+    renderAll();
+    closeAddDayModal();
+  }
+
+  // --------- Render: Plan ---------
+  function renderPlan() {
+    document.getElementById("weekLabel").textContent = labelForWeek(viewWeekStart);
+    const wrap = document.getElementById("dayBlocks");
+    wrap.innerHTML = "";
+    const wk = weekKey(viewWeekStart);
+    const today = new Date();
+    for (let d=0; d<7; d++) {
+      const date = addDays(viewWeekStart, d);
+      const block = document.createElement("div");
+      block.className = "day-block" + (sameDay(date, today) ? " today" : "");
+      const items = state.schedule[wk]?.[d] || {};
+      const itemsHtml = Object.entries(items).map(([sid, it]) => {
+        const safe = escapeHtml(it.text);
+        return `<li>
+          <input type="checkbox" data-sid="${sid}" data-day="${d}" ${it.completed ? "checked" : ""} />
+          <span class="text ${it.completed?"done":""}">${safe}</span>
+          <button class="small-btn" data-action="remove" data-sid="${sid}" data-day="${d}">×</button>
+        </li>`;
+      }).join("");
+      block.innerHTML = `
+        <div class="day-header">
+          <div class="day-name">${DAYS_LONG[d]}</div>
+          <div class="day-date">${fmtDay(date)}</div>
+        </div>
+        <ul class="day-items">${itemsHtml}</ul>
+        <button class="day-add" data-day="${d}">+ Add to ${DAYS[d]}</button>
+      `;
+      // wire events
+      block.querySelector(".day-add").onclick = () => openAddDayModal(viewWeekStart, d);
+      block.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.onchange = (e) => toggleScheduledItem(viewWeekStart, +cb.dataset.day, cb.dataset.sid, cb.checked);
+      });
+      block.querySelectorAll('[data-action="remove"]').forEach(btn => {
+        btn.onclick = () => removeScheduledItem(viewWeekStart, +btn.dataset.day, btn.dataset.sid);
+      });
+      wrap.appendChild(block);
+    }
+  }
+  function toggleScheduledItem(weekMon, dayIdx, sid, val) {
+    const wk = weekKey(weekMon);
+    if (state.schedule[wk]?.[dayIdx]?.[sid]) {
+      state.schedule[wk][dayIdx][sid].completed = val;
+      persist();
+      renderAll();
+    }
+  }
+  function removeScheduledItem(weekMon, dayIdx, sid) {
+    const wk = weekKey(weekMon);
+    const item = state.schedule[wk]?.[dayIdx]?.[sid];
+    if (!item) return;
+    delete state.schedule[wk][dayIdx][sid];
+    // If the source wishlist item no longer appears anywhere scheduled, flip it back to 'idea'.
+    if (item.sourceId && state.wishlist[item.sourceId]) {
+      const stillScheduled = anyStillScheduled(item.sourceId);
+      if (!stillScheduled) state.wishlist[item.sourceId].status = "idea";
+    }
+    persist();
+    renderAll();
+  }
+  function anyStillScheduled(sourceId) {
+    for (const wk of Object.keys(state.schedule)) {
+      for (let d=0; d<7; d++) {
+        const day = state.schedule[wk]?.[d];
+        if (!day) continue;
+        for (const sid of Object.keys(day)) {
+          if (day[sid].sourceId === sourceId) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // --------- Render: Published ---------
+  function renderPub() {
+    document.getElementById("pubWeekLabel").textContent = labelForWeek(pubWeekStart);
+    const wrap = document.getElementById("pubDays");
+    wrap.innerHTML = "";
+    const wk = weekKey(pubWeekStart);
+    const today = new Date();
+    for (let d=0; d<7; d++) {
+      const date = addDays(pubWeekStart, d);
+      const isToday = sameDay(date, today);
+      const items = state.schedule[wk]?.[d] || {};
+      const itemsArr = Object.values(items);
+      const itemsHtml = itemsArr.length
+        ? `<ul class="pub-day-items">${itemsArr.map(it => `
+            <li class="${it.completed?"done":""}"><span class="dot"></span><span class="text">${escapeHtml(it.text)}</span></li>
+          `).join("")}</ul>`
+        : `<div class="pub-day-empty">Nothing planned</div>`;
+      const block = document.createElement("div");
+      block.className = "pub-day" + (isToday ? " today" : "");
+      block.innerHTML = `
+        <div class="pub-day-header">
+          <div class="pub-day-name">${DAYS_LONG[d]}${isToday ? " · today" : ""}</div>
+          <div class="pub-day-date">${fmtDay(date)}</div>
+        </div>
+        ${itemsHtml}
+      `;
+      wrap.appendChild(block);
+    }
+  }
+
+  function labelForWeek(mon) {
+    const thisMon = mondayOf(new Date());
+    if (sameDay(mon, thisMon)) return `This week · ${fmtWeekRange(mon)}`;
+    const next = addDays(thisMon, 7);
+    if (sameDay(mon, next)) return `Next week · ${fmtWeekRange(mon)}`;
+    const prev = addDays(thisMon, -7);
+    if (sameDay(mon, prev)) return `Last week · ${fmtWeekRange(mon)}`;
+    return fmtWeekRange(mon);
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function renderAll() { renderWishlist(); renderPlan(); renderPub(); }
+
+  // --------- View switching ---------
+  function switchView(name) {
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    const id = "view-" + name;
+    const el = document.getElementById(id);
+    if (el) el.classList.add("active");
+    document.querySelectorAll(".tab").forEach(t => {
+      t.classList.toggle("active", t.dataset.view === name);
+    });
+    if (name === "pub") pubWeekStart = mondayOf(new Date());
+    renderAll();
+    window.scrollTo({ top: 0 });
+  }
+
+  // --------- Wiring ---------
+  function wire() {
+    document.querySelectorAll(".tab").forEach(t => {
+      t.onclick = () => switchView(t.dataset.view);
+    });
+
+    document.getElementById("addWishlist").onclick = () => {
+      const inp = document.getElementById("wishlistInput");
+      addWishlist(inp.value);
+      inp.value = ""; inp.focus();
+    };
+    document.getElementById("wishlistInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("addWishlist").click();
+    });
+
+    document.getElementById("prevWeek").onclick = () => { viewWeekStart = addDays(viewWeekStart,-7); renderPlan(); };
+    document.getElementById("nextWeek").onclick = () => { viewWeekStart = addDays(viewWeekStart, 7); renderPlan(); };
+    document.getElementById("thisWeekBtn").onclick = () => { viewWeekStart = mondayOf(new Date()); renderPlan(); };
+
+    document.getElementById("pubPrevWeek").onclick = () => { pubWeekStart = addDays(pubWeekStart,-7); renderPub(); };
+    document.getElementById("pubNextWeek").onclick = () => { pubWeekStart = addDays(pubWeekStart, 7); renderPub(); };
+    document.getElementById("pubThisWeekBtn").onclick = () => { pubWeekStart = mondayOf(new Date()); renderPub(); };
+
+    document.getElementById("modalCancel").onclick = closeScheduleModal;
+    document.getElementById("scheduleModal").addEventListener("click", e => {
+      if (e.target.id === "scheduleModal") closeScheduleModal();
+    });
+
+    document.getElementById("addDayCancel").onclick = closeAddDayModal;
+    document.getElementById("addDayConfirm").onclick = confirmAddDay;
+    document.getElementById("addDayInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") confirmAddDay();
+    });
+    document.getElementById("addDayModal").addEventListener("click", e => {
+      if (e.target.id === "addDayModal") closeAddDayModal();
+    });
+
+    document.getElementById("openSettings").onclick = () => switchView("settings");
+
+    document.getElementById("saveFirebase").onclick = async () => {
+      const text = document.getElementById("firebaseConfig").value.trim();
+      if (!text) {
+        setSyncDot("local", "Cleared. Using local data only.");
+        localStorage.removeItem(LS_FIREBASE);
+        return;
+      }
+      try {
+        const cfg = JSON.parse(text);
+        localStorage.setItem(LS_FIREBASE, JSON.stringify(cfg));
+        setSyncDot("local", "Connecting…");
+        await initFirebase(cfg);
+      } catch (e) {
+        setSyncDot("error", "Invalid config: " + e.message);
+      }
+    };
+    document.getElementById("clearFirebase").onclick = () => {
+      localStorage.removeItem(LS_FIREBASE);
+      document.getElementById("firebaseConfig").value = "";
+      setSyncDot("local", "Disconnected. Reload the page to fully stop syncing.");
+    };
+    // Prefill firebase config if present
+    const stored = localStorage.getItem(LS_FIREBASE);
+    if (stored) {
+      try { document.getElementById("firebaseConfig").value = JSON.stringify(JSON.parse(stored), null, 2); }
+      catch { document.getElementById("firebaseConfig").value = stored; }
+    }
+
+    document.getElementById("exportBtn").onclick = () => {
+      const data = JSON.stringify({ wishlist: state.wishlist, schedule: state.schedule }, null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "our-week-" + new Date().toISOString().slice(0,10) + ".json";
+      a.click(); URL.revokeObjectURL(url);
+    };
+    document.getElementById("resetBtn").onclick = () => {
+      if (!confirm("Wipe ALL local data? This won't affect Firebase if connected.")) return;
+      localStorage.removeItem(LS_KEY);
+      state.wishlist = {}; state.schedule = {};
+      persist(); renderAll();
+    };
+  }
+
+  // --------- Boot ---------
+  loadLocal();
+  wire();
+  renderAll();
+  initFirebaseFromStored();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0f172a" />
+<title>Our Week</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%93%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --surface-2: #f4f4f5;
+    --border: #e4e4e7;
+    --border-strong: #d4d4d8;
+    --text: #18181b;
+    --text-muted: #71717a;
+    --text-subtle: #a1a1aa;
+    --accent: #18181b;
+    --accent-soft: #f4f4f5;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+    --radius: 10px;
+    --radius-sm: 6px;
     --tag-hers: #ec4899;
     --tag-hers-bg: #fce7f3;
     --tag-his:  #3b82f6;
