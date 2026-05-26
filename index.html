@@ -1178,18 +1178,39 @@
     });
   }
 
-  async function persistPlanner() {
+  // Targeted writes — much safer with strict rules. Each helper writes only
+  // the path it touched, so old/loose data elsewhere can't poison new writes.
+  async function writePath(path, value) {
     if (!currentUser) return;
-    if (suppressNextPush) { suppressNextPush = false; return; }
     try {
-      await set(ref(db, "ourweek"), {
-        wishlist: state.wishlist,
-        schedule: state.schedule,
-      });
+      if (value === null) {
+        await remove(ref(db, path));
+      } else {
+        await set(ref(db, path), value);
+      }
     } catch (e) {
-      console.warn("planner write failed:", e);
+      console.warn("write failed:", path, e);
       setSyncDot("error", e.message);
     }
+  }
+  async function updateMulti(updates) {
+    if (!currentUser) return;
+    try {
+      await update(ref(db), updates);
+    } catch (e) {
+      console.warn("multi-update failed:", e);
+      setSyncDot("error", e.message);
+    }
+  }
+  // Strip null/undefined fields so we never send literal null to a validated path.
+  function clean(obj) {
+    const out = {};
+    for (const k of Object.keys(obj)) {
+      const v = obj[k];
+      if (v === null || v === undefined) continue;
+      out[k] = v;
+    }
+    return out;
   }
 
   // ============================================================
@@ -1255,9 +1276,10 @@
     const t = (text || "").trim();
     if (!t) return;
     const id = uid();
+    const item = { text: t, createdAt: Date.now(), status: "idea" };
     state.wishlist = state.wishlist || {};
-    state.wishlist[id] = { text: t, createdAt: Date.now(), status: "idea" };
-    persistPlanner();
+    state.wishlist[id] = item;
+    writePath(`ourweek/wishlist/${id}`, item);
     renderWishlist();
   }
   function editWishlist(id) {
@@ -1268,22 +1290,26 @@
     const t = next.trim();
     if (!t) return;
     state.wishlist[id].text = t;
+    const updates = { [`ourweek/wishlist/${id}/text`]: t };
     for (const wk of Object.keys(state.schedule || {})) {
       for (let d=0; d<7; d++) {
         const day = state.schedule[wk]?.[d];
         if (!day) continue;
         for (const sid of Object.keys(day)) {
-          if (day[sid].sourceId === id) day[sid].text = t;
+          if (day[sid].sourceId === id) {
+            day[sid].text = t;
+            updates[`ourweek/schedule/${wk}/${d}/${sid}/text`] = t;
+          }
         }
       }
     }
-    persistPlanner();
+    updateMulti(updates);
     renderAll();
   }
   function deleteWishlist(id) {
     if (!confirm("Delete this idea?")) return;
     delete state.wishlist[id];
-    persistPlanner();
+    writePath(`ourweek/wishlist/${id}`, null);
     renderWishlist();
   }
 
@@ -1320,15 +1346,19 @@
     state.schedule[wk] = state.schedule[wk] || {};
     state.schedule[wk][dayIdx] = state.schedule[wk][dayIdx] || {};
     const sid = uid();
-    state.schedule[wk][dayIdx][sid] = {
+    const entry = clean({
       text: state.wishlist[sourceId].text,
       completed: false,
       sourceId,
-      time: time || null,
-    };
+      time: time || undefined,
+    });
+    state.schedule[wk][dayIdx][sid] = entry;
     state.wishlist[sourceId].status = "scheduled";
     viewWeekStart = mondayOf(weekMon);
-    persistPlanner();
+    updateMulti({
+      [`ourweek/schedule/${wk}/${dayIdx}/${sid}`]: entry,
+      [`ourweek/wishlist/${sourceId}/status`]: "scheduled",
+    });
     renderAll();
     switchView("plan");
   }
@@ -1361,13 +1391,13 @@
     state.schedule[wk] = state.schedule[wk] || {};
     state.schedule[wk][dayIdx] = state.schedule[wk][dayIdx] || {};
     const sid = uid();
-    state.schedule[wk][dayIdx][sid] = {
+    const entry = clean({
       text,
       completed: false,
-      sourceId: null,
-      time: timeInp.value || null,
-    };
-    persistPlanner();
+      time: timeInp.value || undefined,
+    });
+    state.schedule[wk][dayIdx][sid] = entry;
+    writePath(`ourweek/schedule/${wk}/${dayIdx}/${sid}`, entry);
     renderPlan();
     closeAddDayModal();
   }
@@ -1396,8 +1426,10 @@
     const wk = weekKey(weekMon);
     if (state.schedule[wk]?.[dayIdx]?.[sid]) {
       const v = document.getElementById("timeEditInput").value;
-      state.schedule[wk][dayIdx][sid].time = v || null;
-      persistPlanner();
+      const newTime = v || null;
+      state.schedule[wk][dayIdx][sid].time = newTime;
+      // Setting to null deletes the field, which the rule allows.
+      writePath(`ourweek/schedule/${wk}/${dayIdx}/${sid}/time`, newTime);
       renderPlan();
     }
     closeTimeEditModal();
@@ -1454,7 +1486,7 @@
     const wk = weekKey(weekMon);
     if (state.schedule[wk]?.[dayIdx]?.[sid]) {
       state.schedule[wk][dayIdx][sid].completed = val;
-      persistPlanner();
+      writePath(`ourweek/schedule/${wk}/${dayIdx}/${sid}/completed`, val);
       renderPlan();
     }
   }
@@ -1463,11 +1495,15 @@
     const item = state.schedule[wk]?.[dayIdx]?.[sid];
     if (!item) return;
     delete state.schedule[wk][dayIdx][sid];
+    const updates = { [`ourweek/schedule/${wk}/${dayIdx}/${sid}`]: null };
     if (item.sourceId && state.wishlist[item.sourceId]) {
       const stillScheduled = anyStillScheduled(item.sourceId);
-      if (!stillScheduled) state.wishlist[item.sourceId].status = "idea";
+      if (!stillScheduled) {
+        state.wishlist[item.sourceId].status = "idea";
+        updates[`ourweek/wishlist/${item.sourceId}/status`] = "idea";
+      }
     }
-    persistPlanner();
+    updateMulti(updates);
     renderAll();
   }
   function anyStillScheduled(sourceId) {
